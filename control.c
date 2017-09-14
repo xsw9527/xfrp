@@ -100,7 +100,16 @@ static void client_start_event_cb(struct bufferevent *bev, short what, void *ctx
 	assert(client);
 	struct common_conf 	*c_conf = get_common_config();
 
-	if (what & (BEV_EVENT_EOF|BEV_EVENT_ERROR)) {
+	if (what & BEV_EVENT_CONNECTED) {
+		bufferevent_setcb(bev, recv_cb, NULL, client_start_event_cb, client);
+		bufferevent_enable(bev, EV_READ|EV_WRITE);
+		sync_new_work_connection(bev);
+		debug(LOG_INFO, "proxy service start");
+	
+	/* trate and debug all unconnected signal instead of code block:
+	** 		else if (what & (BEV_EVENT_EOF|BEV_EVENT_ERROR)) 
+	*/
+	} else {
 		if (client->ctl_bev != bev) {
 			debug(LOG_ERR, "Error: should be equal");
 			bufferevent_free(client->ctl_bev);
@@ -109,11 +118,6 @@ static void client_start_event_cb(struct bufferevent *bev, short what, void *ctx
 		debug(LOG_ERR, "Proxy connect server [%s:%d] error", c_conf->server_addr, c_conf->server_port);
 		bufferevent_free(bev);
 		free_proxy_client(client);
-	} else if (what & BEV_EVENT_CONNECTED) {
-		bufferevent_setcb(bev, recv_cb, NULL, client_start_event_cb, client);
-		bufferevent_enable(bev, EV_READ|EV_WRITE);
-		sync_new_work_connection(bev);
-		debug(LOG_INFO, "proxy service start");
 	}
 }
 
@@ -816,7 +820,19 @@ static void connect_event_cb (struct bufferevent *bev, short what, void *ctx)
 {
 	struct common_conf 	*c_conf = get_common_config();
 	static int retry_times = 0;
-	if (what & (BEV_EVENT_EOF|BEV_EVENT_ERROR)) {
+
+	if (what & BEV_EVENT_CONNECTED) {
+		retry_times = 0;
+
+		// recv login-response message before recving othfer fprs messages, 
+		bufferevent_setcb(bev, recv_cb, NULL, connect_event_cb, NULL);
+		bufferevent_enable(bev, EV_READ|EV_WRITE|EV_PERSIST);
+		
+		if (get_common_config()->tcp_mux) 
+			open_connection_session(bev);
+
+		login();
+	} else {
 		if (retry_times >= 10) { // only try 10 times consecutively
 			debug(LOG_ERR, 
 				"have retry connect to xfrp server for %d times, exit!", 
@@ -833,17 +849,6 @@ static void connect_event_cb (struct bufferevent *bev, short what, void *ctx)
 		init_main_control();
 		start_base_connect();
 		close_main_control();
-	} else if (what & BEV_EVENT_CONNECTED) {
-		retry_times = 0;
-
-		// recv login-response message before recving othfer fprs messages, 
-		bufferevent_setcb(bev, recv_cb, NULL, connect_event_cb, NULL);
-		bufferevent_enable(bev, EV_READ|EV_WRITE|EV_PERSIST);
-		
-		if (get_common_config()->tcp_mux) 
-			open_connection_session(bev);
-
-		login();
 	}
 }
 
