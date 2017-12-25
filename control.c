@@ -57,7 +57,7 @@
 #include "session.h"
 #include "common.h"
 #include "login.h"
-
+#include <sys/time.h>
 static struct control *main_ctl;
 static int clients_conn_signel = 0;
 
@@ -865,8 +865,8 @@ static void server_dns_cb(int event_code, struct evutil_addrinfo *addr, void *ct
         set_common_server_ip((const char *)evutil_gai_strerror(event_code));
     } else {
         struct evutil_addrinfo *ai;
-        if (addr->ai_canonname)
-            debug(LOG_DEBUG, "addr->ai_canonname [%s]", addr->ai_canonname);
+       // if (addr->ai_canonname)
+        //    debug(LOG_DEBUG, "addr->ai_canonname [%s]", addr->ai_canonname);
         for (ai = addr; ai; ai = ai->ai_next) {
             char buf[128];
             const char *s = NULL;

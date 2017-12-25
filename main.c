@@ -30,7 +30,11 @@
 
 int main(int argc, char **argv)
 {
-	parse_commandline(argc, argv);
+	//parse_commandline(argc, argv);
+	
+	load_config("frpc.ini");	
+	//makedaemon();
+	
 	init_login();
 	xfrpc_loop();
 }

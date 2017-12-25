@@ -1,0 +1,34 @@
+DIR_INC = ../3rdparty_v300/include 
+SRC  := $(wildcard *.c) 
+DIR_OBJ = ./objects
+DIR_BIN = ./lib
+CC = arm-hisiv300-linux-gcc
+PROJ_INC = ./include
+
+CFLAGS = 
+CFLAGS += -rdynamic -std=gnu99
+
+PLATFORM=3516d
+CFLAGS += -I${DIR_INC} -I$(PROJ_INC) -I.  -D__STDC_FORMAT_MACROS -D_FILE_OFFSET_BITS=64
+#SRC = $(DIR_SRC)  
+OBJS = $(SRC:%.c=$(DIR_OBJ)/%.o) 
+LIBNAME:=remoteconnect
+TARGET:= $(LIBNAME)
+DEPLIBINC = -L../3rdparty_v300/lib 
+DEPLIBS =  -lssl -lcrypto -levent -lz -lm -ljson-c -ldl
+
+all: $(TARGET)
+$(TARGET):$(OBJS)
+	$(CC) $(CFLAGS) $^ -o $@ -Bstatic $(DEPLIBINC) $(DEPLIBS)
+	arm-hisiv300-linux-strip $(LIBNAME)
+
+	
+$(OBJS):$(DIR_OBJ)/%.o : %.c
+	@mkdir -p $(DIR_OBJ)
+	
+	$(CC)  $(CFLAGS) -c $<  -o $@
+	
+clean:
+	rm -rf $(DIR_OBJ)
+	rm -rf $(LIBNAME)
+

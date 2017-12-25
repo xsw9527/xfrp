@@ -43,7 +43,7 @@
 
 typedef void signal_func (int);
 
-static signal_func *set_signal_handler (int signo, signal_func * func);
+//static signal_func *set_signal_handler (int signo, signal_func * func);
 static void usage(const char *appname);
 
 static int is_daemon = 1;
@@ -61,7 +61,7 @@ makedaemon (void)
 			exit (0);
 
 	setsid ();
-	set_signal_handler (SIGHUP, SIG_IGN);
+	signal (SIGHUP, SIG_IGN);
 
 	if (fork () != 0)
 			exit (0);
@@ -73,33 +73,6 @@ makedaemon (void)
 	close (2);
 }
 
-/*
- * Pass a signal number and a signal handling function into this function
- * to handle signals sent to the process.
- */
-static signal_func *
-set_signal_handler (int signo, signal_func * func)
-{
-        struct sigaction act, oact;
-
-        act.sa_handler = func;
-        sigemptyset (&act.sa_mask);
-        act.sa_flags = 0;
-        if (signo == SIGALRM) {
-#ifdef SA_INTERRUPT
-                act.sa_flags |= SA_INTERRUPT;   /* SunOS 4.x */
-#endif
-        } else {
-#ifdef SA_RESTART
-                act.sa_flags |= SA_RESTART;     /* SVR4, 4.4BSD */
-#endif
-        }
-
-        if (sigaction (signo, &act, &oact) < 0)
-                return SIG_ERR;
-
-        return oact.sa_handler;
-}
 
 int 
 get_daemon_status()
@@ -146,24 +119,14 @@ parse_commandline(int argc, char **argv)
             exit(1);
             break;
 
-        case 'c':
-            if (optarg) {
-				confile = strdup(optarg); //never free it
-                assert(confile);
-
-				flag = 1;
-            }
-            break;
+      
 
         case 'f':
             is_daemon = 0;
-            debugconf.log_stderr = 1;
             break;
 
         case 'd':
-            if (optarg) {
-                debugconf.debuglevel = atoi(optarg);
-            }
+           
             break;
 
         case 'v':

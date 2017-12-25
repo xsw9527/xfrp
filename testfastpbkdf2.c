@@ -37,7 +37,7 @@ static void check(pbkdf2_fn fn,
   printf("- test passed\n");
 }
 
-int main(void)
+int main_bk(void)
 {
   /* nb. do not edit this code. edit gentests.py instead. */
   printf("sha1 (6 tests):\n");

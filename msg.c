@@ -27,7 +27,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <json-c/json.h>
-#include <json-c/bits.h>
+//#include <json-c/bits.h>
 #include <openssl/md5.h>
 #include <time.h>
 #include <assert.h>
@@ -43,7 +43,7 @@
 #include "login.h"
 #include "client.h"
 #include "utils.h"
-
+ #define is_error(ptr) (ptr == NULL)
 #define JSON_MARSHAL_TYPE(jobj,key,jtype,item)		\
 json_object_object_add(jobj, key, json_object_new_##jtype((item)));
 
