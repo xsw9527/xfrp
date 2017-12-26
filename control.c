@@ -347,9 +347,17 @@ static void set_ticker_ping_timer(struct event *timeout)
 
 static void hb_sender_cb(evutil_socket_t fd, short event, void *arg)
 {
+	static int notConCount = 0;
 	base_control_ping(NULL);
 	if (is_client_connected())
 		ping(NULL);
+	else{
+		if(notConCount++ > 2){
+			printf("exit because of no connect\n");
+			exit(-1);
+		}
+		printf("Not connect\n");
+	}
 
 	set_ticker_ping_timer(main_ctl->ticker_ping);	
 }

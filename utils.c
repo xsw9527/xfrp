@@ -42,10 +42,56 @@ int is_valid_ip_address(const char *ip_address)
 #define NI_MAXHOST 
 //	net_if_name: name of network interface, e.g. br-lan
 //	return: 1: error 0:get succeed
-int get_net_mac(char *net_if_name, char *mac, int mac_len) {
-	strcpy(mac,"001122334455");
+
+#include    <stdio.h>
+#include    <stdlib.h>
+#include    <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
+
+#include <netinet/if_ether.h>
+#include <netinet/in.h>
+
+#include <arpa/inet.h>
+#include <net/if.h>
+#include <errno.h>
+#include <assert.h>
+
+int get_net_mac( char *pEthName, char *pEthMac,  int iEthMacLen)
+{
+	unsigned char mac[7];
+	int sockfd;
+	struct ifreq req;
+	if ( ( sockfd = socket ( PF_INET,SOCK_DGRAM,0 ) ) ==-1 )
+	{
+		fprintf ( stderr,"NetGetMAC:Sock Error:%s\n\a",strerror ( errno ) );
+		return ( -1 );
+	}
+
+	memset ( &req,0,sizeof ( req ) );
+	strcpy ( req.ifr_name, pEthName);
+	if (ioctl ( sockfd,SIOCGIFHWADDR, ( char * ) &req ) ==-1 )
+	{
+		fprintf ( stderr,"NetGetMAC ioctl SIOCGIFHWADDR:%s\n\a",strerror ( errno ) );
+		close ( sockfd );
+		return ( -1 );
+	}
+
+	memcpy ( mac,req.ifr_hwaddr.sa_data,6 );
+	close ( sockfd );
+
+	snprintf(pEthMac, iEthMacLen, "%02x%02x%02x%02x%02x%02x", 
+	mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+
 	return 0;
 }
+
+
+//int get_net_mac(char *net_if_name, char *mac, int mac_len) {
+//	strcpy(mac,"001122334455");
+//	return 0;
+//}
 
 
 // return: 0: network interface get succeed
